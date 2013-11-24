@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">GSam Battery Monitor - Root Companion</string>
+    <string name="main_intro">Unfortunately, Google has removed the ability in KitKat (4.4) for
+        non-system applications to access battery statistics.  This companion app restores this
+        function by running as a privileged system application.   Root access to your device is
+        required.</string>
+    <string name="main_intro_installed">Congratulations!  This app is correctly installed with access to BATTERY_STATS.  No further action is needed.  Your companion battery monitor should now be fully functional.</string>
+    <string name="main_instructions">Instructions</string>
+    <string name="main_instructions_details">This app needs to be installed in /system/priv-app/.  You
+        can do this manually using a tool such as Root Explorer, or use the automated method below.</string>
+    <string name="main_prereq">Automatic Install Prerequisites</string>  
+    <string name="main_is_root">Is Device Rooted?</string>
+    <string name="main_install_button">Install as Privileged System App</string>
+    <string name="main_install_button_uninstall">Uninstall App</string>
+    <string name="main_complete_title">Congratulations - just one last step!</string>
+    <string name="main_please_reboot">A reboot is required.  Would you like to reboot now?</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="error_occurred">Your current SuperUser APK may need updating.  You may also try
+        installing BusyBox and trying again, or manually copying the app into /system/priv-app/.</string>
+        
+    <!-- Copied from the original BATTERY_STATS permission description -->
+    <string name="permlab_batteryStats">read battery statistics</string>
+    <string name="permdesc_batteryStats">Allows an application to read the current low-level
+        battery use data.  May allow the application to find out detailed information about
+        which apps you use.</string>
+</resources>
