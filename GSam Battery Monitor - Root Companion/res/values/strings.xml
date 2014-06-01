@@ -20,6 +20,8 @@
     <string name="no">No</string>
     <string name="error_occurred">Your current SuperUser APK may need updating.  You may also try
         installing BusyBox and trying again, or manually copying the app into /system/priv-app/.</string>
+    <string name="remove_from_launcher">Remove icon from Launcher</string>
+    <string name="remove_from_launcher_confirm">This will remove the app from your launcher.  You can launch the app by opening up GSam Battery Monitor and choosing the \'Launch Root Companion\' menu option, or by opening it from the store.\n\nDo you want to continue?</string>
         
     <!-- Copied from the original BATTERY_STATS permission description -->
     <string name="permlab_batteryStats">read battery statistics</string>

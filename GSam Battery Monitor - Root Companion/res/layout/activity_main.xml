@@ -72,14 +72,24 @@
 
 
     </GridLayout>
+    
+    <CheckBox
+        android:id="@+id/idRemoveFromLauncherCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/idPrereqLayout"
+        android:layout_below="@+id/idPrereqLayout"
+        android:layout_marginTop="20dp"
+        android:text="@string/remove_from_launcher" />
 
     <Button
         android:id="@+id/idInstallButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/idPrereqLayout"
+        android:layout_below="@+id/idRemoveFromLauncherCheckbox"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
         android:text="@string/main_install_button" />
+
 
 </RelativeLayout>

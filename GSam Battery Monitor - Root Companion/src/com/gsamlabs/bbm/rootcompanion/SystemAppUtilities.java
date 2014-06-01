@@ -1,6 +1,10 @@
 package com.gsamlabs.bbm.rootcompanion;
 
+import java.io.IOException;
+import java.util.concurrent.TimeoutException;
+
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
@@ -8,6 +12,9 @@ import android.content.pm.PackageManager;
 import android.util.Log;
 
 import com.stericson.RootTools.RootTools;
+import com.stericson.RootTools.exceptions.RootDeniedException;
+import com.stericson.RootTools.execution.CommandCapture;
+import com.stericson.RootTools.execution.Shell;
 
 public class SystemAppUtilities {
     private static final String TAG = "SystemAppUtilities";
@@ -82,11 +89,45 @@ public class SystemAppUtilities {
             .setNeutralButton(R.string.yes, new OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    RootTools.restartAndroid();
+                    rebootDevice(((Dialog)dialog).getContext());
                 }
             })
             .setNegativeButton(R.string.no, null)
             .show();
+    }
+    
+    /**
+     * Reboots the device. It uses the 'reboot' shell command instead of the fast restart
+     * This change was made because fast reboot doesn't work on some devices - notably the 
+     * HTC One M8 - or rather it does work, but ends up taking 30 minutes and makes users 
+     * panic that they bricked their phone - not cool.
+     * @param ctxt
+     */
+    private static void rebootDevice(Context ctxt)
+    {
+        CommandCapture command = new CommandCapture(0, "reboot");
+        boolean showError = false;
+        try {
+            RootTools.getShell(true).add(command);
+        } catch (Exception e) {
+            showError = true;
+        }
+        int count = 0;
+        while(!command.isFinished() && (count < 40) && !showError)
+        {
+            try {
+                Thread.sleep(500);
+            } catch (Exception e){};
+            ++count;
+        }
+        if (showError || (command.getExitCode() != 0))
+        {
+            Log.d(TAG, "Restarting phone via rootTools as reboot failed...");
+            AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
+            bldr.setMessage("Unable to reboot automatically.  Please reboot your phone manually.")
+                .setNeutralButton(android.R.string.ok, null)
+                .show();
+        }
     }
     
     public static boolean isBusyBoxInstalled()
@@ -141,7 +182,7 @@ public class SystemAppUtilities {
             .setNeutralButton(R.string.yes, new OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    RootTools.restartAndroid();
+                    rebootDevice(((Dialog)dialog).getContext());
                 }
             })
             .setNegativeButton(R.string.no, null)

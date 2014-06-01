@@ -2,10 +2,16 @@ package com.gsamlabs.bbm.rootcompanion;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ComponentName;
+import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
@@ -15,6 +21,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        final CheckBox removeCheckBox = (CheckBox)findViewById(R.id.idRemoveFromLauncherCheckbox);
         // If we have battery stats permission, handle it specially
         if (SystemAppUtilities.hasBatteryStatsPermission(this))
         {
@@ -25,7 +32,7 @@ public class MainActivity extends Activity {
             findViewById(R.id.idPrereqLayout).setVisibility(View.GONE);
             Button installButton = (Button)findViewById(R.id.idInstallButton);
             installButton.setText(R.string.main_install_button_uninstall);
-            installButton.setOnClickListener(new OnClickListener() {                
+            installButton.setOnClickListener(new View.OnClickListener() {                
                 @Override
                 public void onClick(View v) {
                     try {
@@ -38,12 +45,52 @@ public class MainActivity extends Activity {
                     }
                 }
             });
+            
+            final ComponentName launcherActivityComponent = new ComponentName(this,  MainActivityLauncher.class);
+            removeCheckBox.setChecked(getPackageManager().getComponentEnabledSetting(launcherActivityComponent) == PackageManager.COMPONENT_ENABLED_STATE_DISABLED);            
+            removeCheckBox.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+                
+                @Override
+                public void onCheckedChanged(final CompoundButton buttonView, boolean isChecked) {
+                    if (isChecked)
+                    {
+                        AlertDialog.Builder bldr = new AlertDialog.Builder(MainActivity.this);
+                        bldr.setMessage(R.string.remove_from_launcher_confirm)
+                        .setTitle(R.string.remove_from_launcher)
+                        .setNeutralButton(R.string.no, new DialogInterface.OnClickListener() {                            
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                buttonView.setChecked(false);
+                            }
+                        })
+                        .setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {                                                       
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                getPackageManager().setComponentEnabledSetting(launcherActivityComponent, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
+                            }
+                        })
+                        .setOnCancelListener(new DialogInterface.OnCancelListener() {                            
+                            @Override
+                            public void onCancel(DialogInterface dialog) {
+                                buttonView.setChecked(false);
+                            }
+                        })
+                        .show();
+                    } else
+                    {
+                        getPackageManager().setComponentEnabledSetting(launcherActivityComponent, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP);
+                    }
+                }
+            });
+            
         } else
         {
-            Button installButton = (Button)findViewById(R.id.idInstallButton);
+            removeCheckBox.setVisibility(View.GONE);
+            
+            final Button installButton = (Button)findViewById(R.id.idInstallButton);
 
             installButton.setText(R.string.main_install_button);
-            installButton.setOnClickListener(new OnClickListener() {                
+            installButton.setOnClickListener(new View.OnClickListener() {                
                 @Override
                 public void onClick(View v) {
                     try {
@@ -57,7 +104,7 @@ public class MainActivity extends Activity {
                 }
             });
 
-            ((TextView)findViewById(R.id.idIsRootValue)).setText(SystemAppUtilities.isRootAvailable() ? R.string.yes : R.string.no);
+            ((TextView)findViewById(R.id.idIsRootValue)).setText(SystemAppUtilities.isRootAvailable() ? R.string.yes : R.string.no);            
         }
     }
 
