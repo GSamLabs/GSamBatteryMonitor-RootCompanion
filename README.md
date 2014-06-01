@@ -37,3 +37,6 @@ Help!  Things don't work after installing this!
 
 * Like all root applications, some care must be taken by the device owner when installing this app.  This application is free and open source.  GSam Labs is not responsible for any problems, though we will try and help - simply contact us via the Support link.
 
+Credits
+
+* Thanks to stericson for providing such a great RootTools library (http://code.google.com/p/roottools/)
