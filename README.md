@@ -10,6 +10,7 @@ Why Install?
 What does this do?
 
 * This  runs as a system privileged app and provides the caller access to the Battery Statistics that - prior to Android 4.4 - used to be accessible to any normal application.
+* This also provides the ability to read the content of small files to which the regular battery monitor has no access - wakelock files for example.
 
 Is Root really required?
 
