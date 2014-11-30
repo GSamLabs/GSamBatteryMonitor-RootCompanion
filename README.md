@@ -23,6 +23,7 @@ Is this safe?
 How do I install it?
 
 * Install this just like any other application from the store.  Once installed, there will be a button that will copy the app to /system/priv-app, and prompt you to restart your device.  
+* Flashable Zip:  You can find a flashable zip in the github repository under the RecoveryInstallImages directory (http://goo.gl/0zcqbL).  Flash this in the recovery of your choice.  This should work for most phones, but since the google update binary differs between devices, there is no guarantee.
 * NOTE:  This only works if you have root access to your device!
 
 How do I uninstall it?
