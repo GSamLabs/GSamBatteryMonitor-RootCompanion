@@ -1,7 +1,9 @@
 package com.gsamlabs.bbm.rootcompanion;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.concurrent.TimeoutException;
+import java.io.InputStream;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -12,12 +14,12 @@ import android.content.pm.PackageManager;
 import android.util.Log;
 
 import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.exceptions.RootDeniedException;
 import com.stericson.RootTools.execution.CommandCapture;
-import com.stericson.RootTools.execution.Shell;
 
 public class SystemAppUtilities {
     private static final String TAG = "SystemAppUtilities";
+
+    private static final String backupScriptAssetName = "91-gsamrootcompanion_backup.sh";
 
     private static void checkRootAccess() throws SystemAppManagementException
     {
@@ -83,6 +85,9 @@ public class SystemAppUtilities {
             throw new SystemAppManagementException("Unable to copy the file \""+currentFile+"\" to \""+privAppFile+"\".  You may need to try this manually using a tool such as Root Explorer.");
         }
 
+        // Install the backup script if any...
+        installBackupScript(ctxt);
+        
         AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
         bldr.setMessage(R.string.main_please_reboot)
             .setTitle(R.string.main_complete_title)
@@ -94,6 +99,72 @@ public class SystemAppUtilities {
             })
             .setNegativeButton(R.string.no, null)
             .show();
+    }
+    
+    /**
+     * On Cyanogenmod, /system/addon.d lets you place backup/restore scripts so that
+     * after a nightly update, you don't have to reinstall the system app.  This is
+     * very specific to cyanogenmod (AFAIK).
+     * @param ctxt
+     * @throws SystemAppManagementException
+     */
+    public static void installBackupScript(Context ctxt) throws SystemAppManagementException
+    {
+        File addonDir = new File("/system/addon.d");
+        if (addonDir.exists() && addonDir.isDirectory())
+        {
+            // Verify we do have root
+            checkRootAccess();
+            
+            // First copy the file out of our assets so we can use roottools to copy it into the filesystem.
+            InputStream in = null;
+            FileOutputStream fos = null;
+            try {
+                in = ctxt.getAssets().open(backupScriptAssetName);
+                fos = ctxt.openFileOutput(backupScriptAssetName, Context.MODE_PRIVATE);                
+                
+                byte[] buffer = new byte[1024];
+                int read;
+                while((read = in.read(buffer)) != -1){
+                    fos.write(buffer, 0, read);
+                }            
+            } catch (IOException e) 
+            {
+                Log.e(TAG, "Yikes - can't create asset file - this should never happen...", e);
+                throw new SystemAppManagementException("Unable to install backup script - this is probably OK.  Failed creating local asset file.");
+            } finally 
+            {
+                if (in != null)
+                {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        // Ignore
+                    }
+                }
+                if (fos != null)
+                {
+                    try {
+                        fos.close();
+                    } catch (IOException e) {
+                        // Ignore
+                    }
+                }
+            }
+            
+            // Copy the file to /system/addon.d
+            String backupFile = addonDir.getAbsolutePath() + "/"+ backupScriptAssetName;
+            String currentFile = ctxt.getFilesDir() + "/"+ backupScriptAssetName;
+            // Set the asset file to executable so copyFile will maintain that
+            new File(currentFile).setExecutable(true, false);
+            boolean copiedFile = RootTools.copyFile(currentFile, backupFile, true, true);
+            Log.d(TAG, "Used RootTools to copy file from: "+currentFile+", to: "+backupFile+".  Was it successful? "+copiedFile);
+
+            if (!copiedFile)
+            {
+                throw new SystemAppManagementException("Unable to copy the file \""+currentFile+"\" to \""+backupFile+"\".  You may need to try this manually using a tool such as Root Explorer.");
+            }
+        }        
     }
     
     /**
@@ -171,6 +242,11 @@ public class SystemAppUtilities {
         boolean deletedDataDir = RootTools.deleteFileOrDirectory(ctxt.getApplicationInfo().dataDir, false);
         Log.d(TAG, "Used RootTools to delete data from: "+deletedDataDir+".  Was it successful? "+deletedDataDir);
 
+        // And any backup scripts
+        String backupScript = "/system/addon.d/"+backupScriptAssetName;        
+        boolean deletedBackupScripts = RootTools.deleteFileOrDirectory(backupScript, true);
+        Log.d(TAG, "Used RootTools to delete backup script from: "+backupScript+".  Was it successful? "+deletedBackupScripts);
+        
         if (hasBatteryStatsPermission(ctxt) && !deletedPrivApp)
         {
             throw new SystemAppManagementException("Unable to delete the file: "+privAppFile);
