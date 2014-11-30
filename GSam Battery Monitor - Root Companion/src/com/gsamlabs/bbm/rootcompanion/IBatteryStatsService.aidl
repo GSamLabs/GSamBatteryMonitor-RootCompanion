@@ -4,4 +4,5 @@ interface IBatteryStatsService
 {
 	byte[] getStatistics();
 	boolean hasBatteryStatsPermission();
+	byte[] readProcFile(String fileName);
 }

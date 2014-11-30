@@ -1,6 +1,9 @@
 package com.gsamlabs.bbm.rootcompanion;
 
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 
 import android.app.Service;
 import android.content.Intent;
@@ -84,6 +87,51 @@ public class BatteryStatsService extends Service {
          */
         public boolean hasBatteryStatsPermission() throws RemoteException {
             return mHasBatteryStatsPermission;
+        }
+
+        @Override
+        /**
+         * Reads the specified file into the byte buffer.  This should be used when
+         * the calling program is unable to read the file for some reason (typically
+         * permission denied).  The kernel wakelock (wakeup_sources) file for example.  
+         * The buffer is 32K max.
+         */
+        public byte[] readProcFile(String fileName) throws RemoteException {
+            FileInputStream is = null;
+            byte[] buffer = new byte[32768];
+            int len;
+
+            try {
+                is = new FileInputStream(fileName);
+                len = is.read(buffer);
+                is.close();
+                is = null;
+            } catch (java.io.IOException e) {
+                Log.e(TAG, e.getMessage(), e);
+                throw new RemoteException(e.getMessage());  
+            } finally
+            {
+                if (is != null)
+                {
+                    try {
+                        is.close();
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                        throw new RemoteException(e.getMessage()); 
+                    }
+                }
+            }
+
+            if (len > 0) {
+                int i;
+                for (i=0; i<len; i++) {
+                    if (buffer[i] == '\0') {
+                        len = i;
+                        break;
+                    }
+                }
+            }
+            return Arrays.copyOf(buffer, len);
         }
     };
     
