@@ -13,6 +13,10 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.stericson.RootShell.exceptions.RootDeniedException;
+import com.stericson.RootShell.execution.Command;
+import com.stericson.RootTools.RootTools;
+
 /**
  * A simple service that a caller binds through aidl to 
  * access the battery stats on the system.  The service
@@ -107,8 +111,67 @@ public class BatteryStatsService extends Service {
                 is.close();
                 is = null;
             } catch (java.io.IOException e) {
-                Log.e(TAG, e.getMessage(), e);
-                throw new RemoteException(e.getMessage());  
+                if (e.getMessage().contains("EACCES"))
+                {
+                    // We got a permission denied error.  This happens when
+                    // SELinux is set to enforcing (most Lollipop ROMs).  We
+                    // Will open a shell, and simply cat the file instead.
+                    final StringBuilder sb = new StringBuilder();
+                    Command command = new Command(0, 3000, "cat "+fileName)
+                    {
+                        @Override
+                        public void commandOutput(int id, String line)
+                        {
+                            sb.append(line).append('\n');
+                            super.commandOutput(id, line);
+                        }
+                    };
+                    boolean errorHappened = false;
+                    boolean rootDenied = false;
+                    try {
+                        RootTools.getShell(true).add(command);
+                    } catch (RootDeniedException e1)
+                    {
+                        errorHappened = true;
+                        rootDenied = true;
+                    } catch (Exception e2) {
+                        errorHappened = true;
+                    }
+                    // Since we put a timeout on the command, we can just loop...
+                    while(!command.isFinished() && !errorHappened)
+                    {
+                        try {
+                            Thread.sleep(5);
+                        } catch (Exception e1){};
+                    }
+                    if (errorHappened || (command.getExitCode() != 0))
+                    {
+                        String error = "Unable to read file: "+fileName+". "+command.getExitCode() + ": "+sb.toString();
+                        Log.d(TAG, error);
+                        sb.setLength(0);
+                        if (rootDenied)
+                        {
+                            buffer = new byte[]{(byte)'R'};
+                        } else if (errorHappened)
+                        {
+                            buffer = new byte[]{(byte)'E'};
+                        } else
+                        {
+                            buffer = new byte[]{(byte)'E', (byte)command.getExitCode()};
+                        }
+                        len = buffer.length;
+                    } else
+                    {
+                        // We're good - create the byte array & length
+                        buffer = sb.toString().getBytes();
+                        len = buffer.length;
+                    }
+                } else 
+                {
+                    Log.e(TAG, e.getMessage(), e);
+                    buffer = new byte[]{(byte)'E'};
+                    len = buffer.length;
+                }
             } finally
             {
                 if (is != null)
@@ -117,7 +180,8 @@ public class BatteryStatsService extends Service {
                         is.close();
                     } catch (IOException e) {
                         Log.e(TAG, e.getMessage(), e);
-                        throw new RemoteException(e.getMessage()); 
+                        buffer = new byte[]{(byte)'E'};
+                        len = buffer.length;
                     }
                 }
             }

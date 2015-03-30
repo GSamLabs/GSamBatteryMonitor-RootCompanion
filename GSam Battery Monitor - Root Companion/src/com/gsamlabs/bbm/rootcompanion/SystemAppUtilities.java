@@ -13,8 +13,8 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageManager;
 import android.util.Log;
 
+import com.stericson.RootShell.execution.Command;
 import com.stericson.RootTools.RootTools;
-import com.stericson.RootTools.execution.CommandCapture;
 
 public class SystemAppUtilities {
     private static final String TAG = "SystemAppUtilities";
@@ -176,7 +176,7 @@ public class SystemAppUtilities {
      */
     private static void rebootDevice(Context ctxt)
     {
-        CommandCapture command = new CommandCapture(0, "reboot");
+        Command command = new Command(0, "reboot");
         boolean showError = false;
         try {
             RootTools.getShell(true).add(command);
