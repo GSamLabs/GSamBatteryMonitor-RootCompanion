@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.System;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -20,6 +21,7 @@ public class SystemAppUtilities {
     private static final String TAG = "SystemAppUtilities";
 
     private static final String backupScriptAssetName = "91-gsamrootcompanion_backup.sh";
+    private static final String LOLLIPOP_PRIVAPP_PATH = "/system/priv-app/rootcompanion/rootcompanion.apk";
 
     private static void checkRootAccess() throws SystemAppManagementException
     {
@@ -60,7 +62,34 @@ public class SystemAppUtilities {
     {
         return (PackageManager.PERMISSION_GRANTED == ctxt.getPackageManager().checkPermission("android.permission.BATTERY_STATS", ctxt.getPackageName()));
     }
-    
+
+    /**
+     * Return an appropriate path to the priv-app APK.
+     * On lollipop and higher devices, this path reflects lollipop's priv-app path conventions
+     * @param ctxt
+     * @param doWildcard (see {@link #getAPKName(Context, boolean, boolean) getAPKName}
+     * @return an android-appropriate destination for this app's "future privileged system app" self
+     */
+     public static String getPrivAppPath(Context ctxt, boolean doWildcard) {
+        // on lollipop, the privileged system app paths have one extra directory layer preceding the APK, and they're named the package name, not a name assigned by PackageInstaller
+        int majorVersionNumber = 0;
+        String buildVersion = System.getProperty("ro.build.version.release"); //on LP, this would be 5.#.#
+        try {
+            // we're interested in the "5"
+            majorVersionNumber = Integer.parseInt(buildVersion.split(".")[0]);
+        } catch (NumberFormatException e) {
+            // this is unlikely
+        }
+
+        if (majorVersionNumber < 5) {
+            // pre-lollipop
+            return "/system/priv-app/"+getAPKName(ctxt, false, doWildcard);
+        }
+
+        // post-lollipop
+        return LOLLIPOP_PRIVAPP_PATH;
+     }
+
     /**
      * Does the work to copy the apk into /system/priv-app/.  This leverages RootTools
      * to handle the heavy lifting.
@@ -73,9 +102,10 @@ public class SystemAppUtilities {
     {
         // Verify we do have root
         checkRootAccess();
-        
-        // Copy the file to /system/priv-app
-        String privAppFile = "/system/priv-app/"+getAPKName(ctxt, false, false);
+
+        String privAppFile = getPrivAppPath(ctxt, false);
+
+        // Copy the file to /system/priv-app, named appropriately if on lollipop
         String currentFile = getAPKName(ctxt, true, false);
         boolean copiedApp = RootTools.copyFile(currentFile, privAppFile, true, true);
         Log.d(TAG, "Used RootTools to copy app from: "+currentFile+", to: "+privAppFile+".  Was it successful? "+copiedApp);
@@ -230,7 +260,7 @@ public class SystemAppUtilities {
         checkRootAccess();
         
         // Delete /system/priv-app
-        String privAppFile = "/system/priv-app/"+getAPKName(ctxt, false, true);
+        String privAppFile = getPrivAppPath(ctxt, true);
         boolean deletedPrivApp = RootTools.deleteFileOrDirectory(privAppFile, true);
         Log.d(TAG, "Used RootTools to delete app from: "+privAppFile+".  Was it successful? "+deletedPrivApp);
 
