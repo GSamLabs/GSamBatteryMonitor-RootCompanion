@@ -1,4 +1,4 @@
-package com.gsamlabs.bbm.rootcompanion;
+package com.gsamlabs.bbm.GSamBatteryMonitorRootHelper;
 
 import android.app.Activity;
 import android.app.AlertDialog;

@@ -10,8 +10,8 @@
 
 list_files() {
 cat << EOF
-priv-app/com.gsamlabs.bbm.rootcompanion-1.apk
-priv-app/rootcompanion/rootcompanion.apk
+priv-app/com.gsamlabs.bbm.GSamBatteryMonitorRootHelper-1.apk
+priv-app/GSamBatteryMonitorRootHelper/GSamBatteryMonitorRootHelper.apk
 EOF
 }
 

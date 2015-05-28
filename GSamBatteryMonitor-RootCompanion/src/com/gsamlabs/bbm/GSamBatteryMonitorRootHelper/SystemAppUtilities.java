@@ -1,4 +1,4 @@
-package com.gsamlabs.bbm.rootcompanion;
+package com.gsamlabs.bbm.GSamBatteryMonitorRootHelper;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -21,7 +21,7 @@ public class SystemAppUtilities {
     private static final String TAG = "SystemAppUtilities";
 
     private static final String backupScriptAssetName = "91-gsamrootcompanion_backup.sh";
-    private static final String LOLLIPOP_PRIVAPP_PATH = "/system/priv-app/rootcompanion/rootcompanion.apk";
+    private static final String LOLLIPOP_PRIVAPP_PATH = "/system/priv-app/GSamBatteryMonitorRootHelper/GSamBatteryMonitorRootHelper.apk";
 
     private static void checkRootAccess() throws SystemAppManagementException
     {

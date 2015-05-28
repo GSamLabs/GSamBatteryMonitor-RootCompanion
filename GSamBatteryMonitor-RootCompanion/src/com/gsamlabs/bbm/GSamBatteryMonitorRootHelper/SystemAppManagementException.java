@@ -1,4 +1,4 @@
-package com.gsamlabs.bbm.rootcompanion;
+package com.gsamlabs.bbm.GSamBatteryMonitorRootHelper;
 
 public class SystemAppManagementException extends Exception {
 

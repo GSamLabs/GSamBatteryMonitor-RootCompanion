@@ -1,4 +1,4 @@
-package com.gsamlabs.bbm.rootcompanion;
+package com.gsamlabs.bbm.GSamBatteryMonitorRootHelper;
 
 import java.io.FileInputStream;
 import java.io.IOException;
