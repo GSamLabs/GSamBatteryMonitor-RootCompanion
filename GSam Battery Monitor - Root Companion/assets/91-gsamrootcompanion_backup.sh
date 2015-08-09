@@ -11,6 +11,7 @@
 list_files() {
 cat << EOF
 priv-app/com.gsamlabs.bbm.rootcompanion-1.apk
+priv-app/gsamrootcompanion.apk
 EOF
 }
 

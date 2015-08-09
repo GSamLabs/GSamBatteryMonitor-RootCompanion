@@ -1,10 +1,16 @@
 package com.gsamlabs.bbm.rootcompanion;
 
+import com.stericson.RootTools.RootTools;
+
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -103,8 +109,30 @@ public class MainActivity extends Activity {
                     }
                 }
             });
-
-            ((TextView)findViewById(R.id.idIsRootValue)).setText(SystemAppUtilities.isRootAvailable() ? R.string.yes : R.string.no);            
+            
+            
+        	AsyncTask<Void, Void, Boolean> checkRoot = new AsyncTask<Void, Void, Boolean>()
+        	{
+        		ProgressDialog progress = null;
+        	    @Override
+	    	    protected void onPreExecute() {
+	    	        super.onPreExecute();
+	    	        progress = ProgressDialog.show(MainActivity.this, getText(R.string.main_progress_title), getText(R.string.main_progress_checking_for_root));  
+	    	    }
+	    		
+				@Override
+				protected Boolean doInBackground(Void... params) {
+					 // Verify we do have root
+					return SystemAppUtilities.isRootAvailable();
+				}
+	
+	    		@Override
+				protected void onPostExecute(Boolean result) {
+	    			progress.dismiss();
+	                ((TextView)findViewById(R.id.idIsRootValue)).setText(result ? R.string.yes : R.string.no);
+				}
+        	};    
+        	checkRoot.execute((Void)null);
         }
     }
 

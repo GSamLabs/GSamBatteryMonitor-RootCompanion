@@ -5,20 +5,23 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import com.stericson.RootShell.execution.Command;
+import com.stericson.RootTools.RootTools;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.util.Log;
-
-import com.stericson.RootShell.execution.Command;
-import com.stericson.RootTools.RootTools;
 
 public class SystemAppUtilities {
     private static final String TAG = "SystemAppUtilities";
-
+    private static String privAppFile = "/system/priv-app/gsamrootcompanion.apk";
+    
     private static final String backupScriptAssetName = "91-gsamrootcompanion_backup.sh";
 
     private static void checkRootAccess() throws SystemAppManagementException
@@ -69,36 +72,79 @@ public class SystemAppUtilities {
      * @param ctxt
      * @throws SystemAppManagementException on any error
      */
-    public static void installAsSystemApp(Context ctxt) throws SystemAppManagementException
+    public static void installAsSystemApp(final Context ctxt) throws SystemAppManagementException
     {
-        // Verify we do have root
-        checkRootAccess();
-        
-        // Copy the file to /system/priv-app
-        String privAppFile = "/system/priv-app/"+getAPKName(ctxt, false, false);
-        String currentFile = getAPKName(ctxt, true, false);
-        boolean copiedApp = RootTools.copyFile(currentFile, privAppFile, true, true);
-        Log.d(TAG, "Used RootTools to copy app from: "+currentFile+", to: "+privAppFile+".  Was it successful? "+copiedApp);
+    	AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>()
+    	{
+			SystemAppManagementException error = null;
+    		ProgressDialog progress = null;
+    		
+    	    @Override
+    	    protected void onPreExecute() {
+    	        super.onPreExecute();
+    	        progress = ProgressDialog.show(ctxt, ctxt.getText(R.string.main_progress_title),ctxt.getText(R.string.main_progress_copy_to_system));  
+    	    }
+    		
+			@Override
+			protected Boolean doInBackground(Void... params) {
+				// Verify we do have root
+		        try {
+					checkRootAccess();
+				} catch (SystemAppManagementException e) {
+					error = e;
+					return false;
+				}
+		        
+		        // Copy the file to /system/priv-app
+		        String currentFile = getAPKName(ctxt, true, false);
+		        boolean copiedApp = RootTools.copyFile(currentFile, privAppFile, true, true);
+		        Log.d(TAG, "Used RootTools to copy app from: "+currentFile+", to: "+privAppFile+".  Was it successful? "+copiedApp);
 
-        if (!copiedApp)
-        {
-            throw new SystemAppManagementException("Unable to copy the file \""+currentFile+"\" to \""+privAppFile+"\".  You may need to try this manually using a tool such as Root Explorer.");
-        }
+		        if (!copiedApp)
+		        {
+		            error = new SystemAppManagementException("Unable to copy the file \""+currentFile+"\" to \""+privAppFile+"\".  You may need to try this manually using a tool such as Root Explorer.");
+		            return false;
+		        }
 
-        // Install the backup script if any...
-        installBackupScript(ctxt);
-        
-        AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
-        bldr.setMessage(R.string.main_please_reboot)
-            .setTitle(R.string.main_complete_title)
-            .setNeutralButton(R.string.yes, new OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    rebootDevice(((Dialog)dialog).getContext());
-                }
-            })
-            .setNegativeButton(R.string.no, null)
-            .show();
+		        // Install the backup script if any...
+		        try {
+					installBackupScript(ctxt);
+				} catch (SystemAppManagementException e) {
+					error = e;
+					return false;
+				}
+		        
+		        return true;
+			}
+
+    		@Override
+			protected void onPostExecute(Boolean result) {
+    			progress.dismiss();
+
+    			if (result)
+    			{
+    				AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
+    		        bldr.setMessage(R.string.main_please_reboot)
+    		            .setTitle(R.string.main_complete_title)
+    		            .setNeutralButton(R.string.yes, new OnClickListener() {
+    		                @Override
+    		                public void onClick(DialogInterface dialog, int which) {
+    		                    rebootDevice(((Dialog)dialog).getContext());
+    		                }
+    		            })
+    		            .setNegativeButton(R.string.no, null)
+    		            .show();
+    			} else
+    			{
+    				AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
+    				String message = (error != null) ? error.getMessage() : "Unknown Error";
+                    bldr.setMessage(message)
+                        .setNeutralButton(android.R.string.ok, null)
+                        .show();
+    			}
+			}
+    	};    
+    	task.execute((Void)null);
     }
     
     /**
@@ -174,31 +220,58 @@ public class SystemAppUtilities {
      * panic that they bricked their phone - not cool.
      * @param ctxt
      */
-    private static void rebootDevice(Context ctxt)
+    private static void rebootDevice(final Context ctxt)
     {
-        Command command = new Command(0, "reboot");
-        boolean showError = false;
-        try {
-            RootTools.getShell(true).add(command);
-        } catch (Exception e) {
-            showError = true;
-        }
-        int count = 0;
-        while(!command.isFinished() && (count < 40) && !showError)
-        {
-            try {
-                Thread.sleep(500);
-            } catch (Exception e){};
-            ++count;
-        }
-        if (showError || (command.getExitCode() != 0))
-        {
-            Log.d(TAG, "Restarting phone via rootTools as reboot failed...");
-            AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
-            bldr.setMessage("Unable to reboot automatically.  Please reboot your phone manually.")
-                .setNeutralButton(android.R.string.ok, null)
-                .show();
-        }
+    	AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>()
+    	{
+    		ProgressDialog progress = null;
+    		
+    	    @Override
+    	    protected void onPreExecute() {
+    	        super.onPreExecute();
+    	        progress = ProgressDialog.show(ctxt, ctxt.getText(R.string.main_progress_title),ctxt.getText(R.string.main_progress_title));  
+    	    }
+    		
+			@Override
+			protected Boolean doInBackground(Void... params) {
+				Command command = new Command(0, "reboot");
+		        boolean showError = false;
+		        try {
+		            RootTools.getShell(true).add(command);
+		        } catch (Exception e) {
+		            showError = true;
+		        }
+		        int count = 0;
+		        while(!command.isFinished() && (count < 40) && !showError)
+		        {
+		            try {
+		                Thread.sleep(500);
+		            } catch (Exception e){};
+		            ++count;
+		        }
+		        if (showError || (command.getExitCode() != 0))
+		        {
+		        	return false;
+		        }
+		        
+		        return true;
+			}
+
+    		@Override
+			protected void onPostExecute(Boolean result) {
+    			progress.dismiss();
+
+    			if (!result)
+    			{
+    	            Log.d(TAG, "Restarting phone via rootTools as reboot failed...");
+    	            AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
+    	            bldr.setMessage("Unable to reboot automatically.  Please reboot your phone manually.")
+    	                .setNeutralButton(android.R.string.ok, null)
+    	                .show();
+    			} 
+			}
+    	};    
+    	task.execute((Void)null);    	
     }
     
     public static boolean isBusyBoxInstalled()
@@ -224,44 +297,97 @@ public class SystemAppUtilities {
      * @param ctxt
      * @throws SystemAppManagementException on any error.
      */
-    public static void uninstallApp(Context ctxt) throws SystemAppManagementException
+    public static void uninstallApp(final Context ctxt) throws SystemAppManagementException
     {
-        // Verify we do have root
-        checkRootAccess();
-        
-        // Delete /system/priv-app
-        String privAppFile = "/system/priv-app/"+getAPKName(ctxt, false, true);
-        boolean deletedPrivApp = RootTools.deleteFileOrDirectory(privAppFile, true);
-        Log.d(TAG, "Used RootTools to delete app from: "+privAppFile+".  Was it successful? "+deletedPrivApp);
+    	AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>()
+    	{
 
-        // Now delete /data/app
-        boolean deletedDataApp = RootTools.deleteFileOrDirectory(getAPKName(ctxt, true, false), false);
-        Log.d(TAG, "Used RootTools to delete app from: "+deletedDataApp+".  Was it successful? "+deletedDataApp);
+			SystemAppManagementException error = null;
+    		ProgressDialog progress = null;
+    		
+    	    @Override
+    	    protected void onPreExecute() {
+    	        super.onPreExecute();
+    	        progress = ProgressDialog.show(ctxt, ctxt.getText(R.string.main_progress_title),ctxt.getText(R.string.main_progress_deleting));  
+    	    }
+    		
+			@Override
+			protected Boolean doInBackground(Void... params) {
+				 // Verify we do have root
+		        try {
+					checkRootAccess();
+				} catch (SystemAppManagementException e) {
+					error = e;
+					return false;
+				}
+		        		        
+		        // Delete /system/priv-app
+		        // First try the 'properly' named one.  This is a hard-coded name:
+		        boolean deletedPrivApp = RootTools.deleteFileOrDirectory(privAppFile, true);
+		        Log.d(TAG, "Used RootTools to delete app from: "+privAppFile+".  Was it successful? "+deletedPrivApp);
+		        
+		        if (!deletedPrivApp)
+		        {		        
+		        	// If that didn't work, we'll try to 'discover' it.  This works if we don't have any updates installed.
+		        	String otherPathToPrivAppFile = "/system/priv-app/"+getAPKName(ctxt, false, true);
+		        	deletedPrivApp = RootTools.deleteFileOrDirectory(otherPathToPrivAppFile, true);
+		        	Log.d(TAG, "Used RootTools to delete app from: "+otherPathToPrivAppFile+".  Was it successful? "+deletedPrivApp);
+		        }
+		        if (deletedPrivApp)
+		        {
+		        	// Now delete /data/app
+		        	String dataAppDirectory = ctxt.getApplicationInfo().sourceDir.substring(0, ctxt.getApplicationInfo().sourceDir.lastIndexOf('/'));
+		        	if (dataAppDirectory.startsWith("/data/app"))
+		        	{
+		        		boolean deletedDataApp = RootTools.deleteFileOrDirectory(dataAppDirectory, false);
+		        		Log.d(TAG, "Used RootTools to delete app from: "+dataAppDirectory+".  Was it successful? "+deletedDataApp);
+		        	}
 
-        // Now delete any files etc.
-        boolean deletedDataDir = RootTools.deleteFileOrDirectory(ctxt.getApplicationInfo().dataDir, false);
-        Log.d(TAG, "Used RootTools to delete data from: "+deletedDataDir+".  Was it successful? "+deletedDataDir);
+		        	// Now delete any files etc.
+		        	boolean deletedDataDir = RootTools.deleteFileOrDirectory(ctxt.getApplicationInfo().dataDir, false);
+		        	Log.d(TAG, "Used RootTools to delete data from: "+ctxt.getApplicationInfo().dataDir+".  Was it successful? "+deletedDataDir);
 
-        // And any backup scripts
-        String backupScript = "/system/addon.d/"+backupScriptAssetName;        
-        boolean deletedBackupScripts = RootTools.deleteFileOrDirectory(backupScript, true);
-        Log.d(TAG, "Used RootTools to delete backup script from: "+backupScript+".  Was it successful? "+deletedBackupScripts);
-        
-        if (hasBatteryStatsPermission(ctxt) && !deletedPrivApp)
-        {
-            throw new SystemAppManagementException("Unable to delete the file: "+privAppFile);
-        }
+		        	// And any backup scripts
+		        	String backupScript = "/system/addon.d/"+backupScriptAssetName;        
+		        	boolean deletedBackupScripts = RootTools.deleteFileOrDirectory(backupScript, true);
+		        	Log.d(TAG, "Used RootTools to delete backup script from: "+backupScript+".  Was it successful? "+deletedBackupScripts);
+		        }
+		        
+		        if (hasBatteryStatsPermission(ctxt) && !deletedPrivApp)
+		        {
+		            error = new SystemAppManagementException("Unable to delete the file: "+privAppFile);
+		            return false;
+		        }
+		        return true;
+			}
 
-        AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
-        bldr.setMessage(R.string.main_please_reboot)
-            .setTitle(R.string.main_complete_title)
-            .setNeutralButton(R.string.yes, new OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    rebootDevice(((Dialog)dialog).getContext());
-                }
-            })
-            .setNegativeButton(R.string.no, null)
-            .show();
+    		@Override
+			protected void onPostExecute(Boolean result) {
+    			progress.dismiss();
+
+    			if (result)
+    			{
+    				AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
+    				bldr.setMessage(R.string.main_please_reboot)
+    					.setTitle(R.string.main_complete_title)
+    					.setNeutralButton(R.string.yes, new OnClickListener() {
+    						@Override
+    						public void onClick(DialogInterface dialog, int which) {
+    							rebootDevice(((Dialog)dialog).getContext());
+    						}
+    					})
+    					.setNegativeButton(R.string.no, null)
+    					.show();
+    			} else
+    			{
+    				AlertDialog.Builder bldr = new AlertDialog.Builder(ctxt);
+    				String message = (error != null) ? error.getMessage() : "Unknown Error";
+                    bldr.setMessage(message)
+                        .setNeutralButton(android.R.string.ok, null)
+                        .show();
+    			}
+			}
+    	};    
+    	task.execute((Void)null);
     }
 }
