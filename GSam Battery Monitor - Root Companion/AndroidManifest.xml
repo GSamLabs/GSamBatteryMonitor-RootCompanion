@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.gsamlabs.bbm.rootcompanion"
-    android:versionCode="5"
-    android:versionName="1.4" >
+    android:versionCode="6"
+    android:versionName="1.5" >
 
     <!-- Minimum of KitKat - no point in offering it for other versions! -->
     <uses-sdk
@@ -23,6 +23,7 @@
     <uses-permission android:name="android.permission.BATTERY_STATS" />
     <!-- Added for Android M -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />  
     <!-- Courtesy to show that we use root to copy ourselves into /system/priv-app/ -->
     <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
 

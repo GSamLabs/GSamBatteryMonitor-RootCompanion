@@ -40,10 +40,15 @@ public class SystemAppUtilities {
      * @param includeFullPath If false, only the apk name will be returned
      * @param doWildCard If true, we'll wildcard the -X.apk part as simply *
      * @return
+     * @throws SystemAppManagementException 
      */
-    private static String getAPKName(Context ctxt, boolean includeFullPath, boolean doWildCard)
+    private static String getAPKName(Context ctxt, boolean includeFullPath, boolean doWildCard) throws SystemAppManagementException
     {
         String fullPath = ctxt.getApplicationInfo().sourceDir;
+        if (fullPath.isEmpty() || (fullPath.lastIndexOf('/') == -1))
+        {
+        	throw new SystemAppManagementException("Unable to find the path to the APK.  Is it already uninsatlled?  Did you remember to reboot after uninstalling?  Current location appears to be: "+fullPath);
+        }
         if (!includeFullPath)
         {
             fullPath = fullPath.substring(fullPath.lastIndexOf('/') + 1);
@@ -96,7 +101,13 @@ public class SystemAppUtilities {
 				}
 		        
 		        // Copy the file to /system/priv-app
-		        String currentFile = getAPKName(ctxt, true, false);
+		        String currentFile;
+				try {
+					currentFile = getAPKName(ctxt, true, false);
+				} catch (SystemAppManagementException e) {
+					error = e;
+					return false;
+				}
 		        boolean copiedApp = RootTools.copyFile(currentFile, privAppFile, true, true);
 		        Log.d(TAG, "Used RootTools to copy app from: "+currentFile+", to: "+privAppFile+".  Was it successful? "+copiedApp);
 
@@ -329,7 +340,18 @@ public class SystemAppUtilities {
 		        if (!deletedPrivApp)
 		        {		        
 		        	// If that didn't work, we'll try to 'discover' it.  This works if we don't have any updates installed.
-		        	String otherPathToPrivAppFile = "/system/priv-app/"+getAPKName(ctxt, false, true);
+		        	String apkLocation;
+					try {
+						apkLocation = getAPKName(ctxt, false, true);
+						if (apkLocation.isEmpty() || apkLocation.startsWith("."))
+						{
+							throw new SystemAppManagementException("Invalid APK location - this should NEVER happen.  Location: "+apkLocation);
+						}
+					} catch (SystemAppManagementException e) {
+						error = e;
+						return false;
+					}
+		        	String otherPathToPrivAppFile = "/system/priv-app/"+apkLocation;
 		        	deletedPrivApp = RootTools.deleteFileOrDirectory(otherPathToPrivAppFile, true);
 		        	Log.d(TAG, "Used RootTools to delete app from: "+otherPathToPrivAppFile+".  Was it successful? "+deletedPrivApp);
 		        }
@@ -337,15 +359,20 @@ public class SystemAppUtilities {
 		        {
 		        	// Now delete /data/app
 		        	String dataAppDirectory = ctxt.getApplicationInfo().sourceDir.substring(0, ctxt.getApplicationInfo().sourceDir.lastIndexOf('/'));
-		        	if (dataAppDirectory.startsWith("/data/app"))
+		        	if (dataAppDirectory.startsWith("/data/app/") && 
+		        		(dataAppDirectory.length() > "/data/app/".length()))
 		        	{
 		        		boolean deletedDataApp = RootTools.deleteFileOrDirectory(dataAppDirectory, false);
 		        		Log.d(TAG, "Used RootTools to delete app from: "+dataAppDirectory+".  Was it successful? "+deletedDataApp);
 		        	}
 
 		        	// Now delete any files etc.
-		        	boolean deletedDataDir = RootTools.deleteFileOrDirectory(ctxt.getApplicationInfo().dataDir, false);
-		        	Log.d(TAG, "Used RootTools to delete data from: "+ctxt.getApplicationInfo().dataDir+".  Was it successful? "+deletedDataDir);
+		        	String dataDir = ctxt.getApplicationInfo().dataDir;
+		        	if (dataDir.contains("gsamlabs"))
+		        	{
+		        		boolean deletedDataDir = RootTools.deleteFileOrDirectory(ctxt.getApplicationInfo().dataDir, false);
+		        		Log.d(TAG, "Used RootTools to delete data from: "+ctxt.getApplicationInfo().dataDir+".  Was it successful? "+deletedDataDir);
+		        	}
 
 		        	// And any backup scripts
 		        	String backupScript = "/system/addon.d/"+backupScriptAssetName;        
