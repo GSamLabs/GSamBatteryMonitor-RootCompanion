@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.gsamlabs.bbm.rootcompanion"
-    android:versionCode="6"
-    android:versionName="1.5" >
+    android:versionCode="7"
+    android:versionName="1.6" >
 
     <!-- Minimum of KitKat - no point in offering it for other versions! -->
     <uses-sdk
         android:minSdkVersion="19"
-        android:targetSdkVersion="19" />
+        android:targetSdkVersion="23" />
 
     <!-- Create our own permission that any calling app must have.  We do this
          So that calling apps still need to publicize their need for BATTERY_STATS -->
@@ -16,7 +16,7 @@
         android:description="@string/permdesc_batteryStats"
         android:label="@string/permlab_batteryStats"
         android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
-        android:protectionLevel="dangerous" >
+        android:protectionLevel="normal" >
     </permission>
 
     <!-- Even though we're root, still need the appropriate permissions -->
