@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">GSam Battery Monitor - Root Companion</string>
+    <string name="main_intro">К сожалению, Google убрал в KitKat (4.4) возможность
+        доступа несистемных приложений к статистике батареи.  Это приложение-компаньон восстанавливает 
+        данную функцию, работая в качестве привилегированного системного приложения.   Необходим рут-доступ
+        на устройстве.</string>
+    <string name="main_intro_installed">Поздравляем!  Приложение успешно установлено с доступом к BATTERY_STATS.  Дальнейших действий не требуется.  Компаньон Вашего монитора батареи теперь полностью функционален.</string>
+    <string name="main_instructions">Инструкции</string>
+    <string name="main_instructions_details">Приложение должно быть установлено в /system/priv-app/.  Вы
+        можете сделать это вручную с помощью таких инструментов, как Root Explorer, или использовать автоматический метод ниже.</string>
+    <string name="main_prereq">Требования для автоматической установки</string>  
+    <string name="main_is_root">На устройстве есть рут?</string>
+    <string name="main_install_button">Установить как привилегированное системное приложение</string>
+    <string name="main_install_button_uninstall">Удалить приложение</string>
+    <string name="main_complete_title">Поздравляем - остался один шаг!</string>
+    <string name="main_please_reboot">Необходима перезагрузка.  Хотите перезагрузить сейчас?</string>
+    <string name="main_progress_title">Пожалуйста, подождите...</string>
+    <string name="main_progress_checking_for_root">Проверка рут-доступа...</string>
+    <string name="main_progress_copy_to_system">Копирование в /system/priv-app...\n\nУбедитесь, что Вы приняли все запросы суперпользователя.</string>
+    <string name="main_progress_deleting">Удаление приложения...\n\nУбедитесь, что Вы приняли все запросы суперпользователя.</string>
+    <string name="yes">Да</string>
+    <string name="no">Нет</string>
+    <string name="error_occurred">Возможно, Ваше текущее приложение суперпользователя нуждается в обновлении.  Также можете
+        установить BusyBox и попробовать снова, или же скопируйте приложение вручную в /system/priv-app/.</string>
+    <string name="remove_from_launcher">Убрать значок из лончера</string>
+    <string name="remove_from_launcher_confirm">Приложение не будет отображаться в лончере.  Вы можете запустить его, открыв GSam Battery Monitor и выбрав \'Запустить Root Companion\' в меню, или открыв его из магазина.\n\nХотите продолжить?</string>
+
+    <!-- Copied from the original BATTERY_STATS permission description -->
+    <string name="permlab_batteryStats">чтение статистики батареи</string>
+    <string name="permdesc_batteryStats">Разрешение приложению читать текущие базовые данные 
+        использования батареи.  Возможность разрешения приложению получить детальную информацию
+        об используемых приложениях.</string>
+</resources>
