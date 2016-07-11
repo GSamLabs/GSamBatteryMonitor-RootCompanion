@@ -1,0 +1,95 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_horizontal"
+    android:padding="16dp"
+    tools:context=".MainActivity" >
+
+    <TextView
+        android:id="@+id/idIntroText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="0dp"
+        android:text="@string/main_intro"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/idInstructionsHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/idIntroText"
+        android:layout_below="@+id/idIntroText"
+        android:layout_marginTop="10dp"
+        android:text="@string/main_instructions"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <TextView
+        android:id="@+id/idInstructionsDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/idInstructionsHeader"
+        android:layout_below="@+id/idInstructionsHeader"
+        android:layout_marginTop="10dp"
+        android:text="@string/main_instructions_details"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <TextView
+        android:id="@+id/idPreReq"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/idInstructionsDetail"
+        android:layout_below="@+id/idInstructionsDetail"
+        android:layout_marginTop="10dp"
+        android:text="@string/main_prereq"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <GridLayout
+        android:id="@+id/idPrereqLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/idPreReq"
+        android:layout_below="@+id/idPreReq"
+        android:layout_marginTop="10dp"
+        android:columnCount="2" >
+
+        <TextView
+            android:id="@+id/idIsRootLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/main_is_root"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/idIsRootValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="10dp"
+            android:text="@string/no"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+
+    </GridLayout>
+    
+    <CheckBox
+        android:id="@+id/idRemoveFromLauncherCheckbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignLeft="@+id/idPrereqLayout"
+        android:layout_below="@+id/idPrereqLayout"
+        android:layout_marginTop="20dp"
+        android:text="@string/remove_from_launcher" />
+
+    <Button
+        android:id="@+id/idInstallButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/idRemoveFromLauncherCheckbox"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:text="@string/main_install_button" />
+
+
+</RelativeLayout>
