@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.gsamlabs.bbm.rootcompanion">
+
+    <!-- Create our own permission that any calling app must have.  We do this
+         So that calling apps still need to publicize their need for BATTERY_STATS -->
+    <permission
+        android:name="com.gsamlabs.permission.BATTERY_STATS"
+        android:description="@string/permdesc_batteryStats"
+        android:label="@string/permlab_batteryStats"
+        android:permissionGroup="android.permission-group.SYSTEM_TOOLS"
+        android:protectionLevel="normal" >
+    </permission>
+
+    <!-- Even though we're root, still need the appropriate permissions -->
+    <uses-permission android:name="android.permission.BATTERY_STATS" />
+    <!-- Added for Android M -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-feature android:name="android.hardware.wifi" android:required="false" />  
+    <!-- Courtesy to show that we use root to copy ourselves into /system/priv-app/ -->
+    <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppBaseTheme" >
+        <!-- NOTE:  This activity may get disabled, thereby hiding the app from the launcher -->
+        <activity
+            android:name="com.gsamlabs.bbm.rootcompanion.MainActivityLauncher"
+            android:label="@string/app_name" 
+            android:noHistory="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        
+        <activity
+            android:name="com.gsamlabs.bbm.rootcompanion.MainActivity"
+            android:label="@string/app_name"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.INFO" />
+            </intent-filter>
+        </activity>
+
+        <!-- The service providing getStatistics - we require our custom BATTERY_STATS permission -->
+        <service
+            android:name="com.gsamlabs.bbm.rootcompanion.BatteryStatsService"
+            android:permission="com.gsamlabs.permission.BATTERY_STATS" >
+            <intent-filter>
+                <action android:name="com.gsamlabs.bbm.rootcompanion.IBatteryStatsService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>
